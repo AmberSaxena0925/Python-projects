@@ -1,0 +1,78 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Student Performance Analysis System",
+			"type": "shell",
+			"command": "streamlit",
+			"args": [
+				"run",
+				"student_performance_analysis/app.py",
+				"--server.headless",
+				"true"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Student Performance Analysis System (configured Python)",
+			"type": "shell",
+			"command": "C:/Users/Asus/AppData/Roaming/uv/python/cpython-3.14.3-windows-x86_64-none/python.exe",
+			"args": [
+				"-m",
+				"streamlit",
+				"run",
+				"student_performance_analysis/app.py",
+				"--server.headless",
+				"true"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Streamlit launch",
+			"type": "shell",
+			"command": "& 'C:/Users/Asus/AppData/Roaming/uv/python/cpython-3.14.3-windows-x86_64-none/python.exe' -m streamlit run student_performance_analysis/app.py --server.headless true",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Student Performance Analysis System - Python 3.14",
+			"type": "shell",
+			"command": "& 'C:/Users/Asus/AppData/Roaming/uv/python/cpython-3.14.3-windows-x86_64-none/python.exe' -m streamlit run student_performance_analysis/app.py --server.headless true --server.port 8501",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Student Performance Analysis System - py launcher",
+			"type": "shell",
+			"command": "py",
+			"args": [
+				"-m",
+				"streamlit",
+				"run",
+				"student_performance_analysis/app.py",
+				"--server.headless",
+				"true",
+				"--server.port",
+				"8501"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Student Performance Analysis System - direct Python311",
+			"type": "shell",
+			"command": "& 'C:/Users/Asus/AppData/Local/Programs/Python/Python311/python.exe' -m streamlit run student_performance_analysis/app.py --server.headless true --server.port 8501",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install Student Performance Analysis requirements",
+			"type": "shell",
+			"command": "& 'C:/Users/Asus/AppData/Local/Programs/Python/Python311/python.exe' -m pip install -r student_performance_analysis/requirements.txt",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
