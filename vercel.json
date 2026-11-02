@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app.py": {
+      "excludeFiles": "{.venv/**,.uv-cache/**,.python/**,**/__pycache__/**,student_performance_analysis/assets/**,student_performance_analysis/reports/**}"
+    }
+  }
+}

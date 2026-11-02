@@ -1,0 +1,6 @@
+.venv/
+.uv-cache/
+.python/
+__pycache__/
+*.py[cod]
+.vercel/

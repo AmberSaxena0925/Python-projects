@@ -1,43 +1,63 @@
-"""Vercel entrypoint for the Student Performance Analysis System.
-
-The original Streamlit interface is preserved in ``streamlit_app.py``. Vercel
-loads this module as a WSGI application, so the exported ``app`` object is the
-Flask application below.
-"""
+"""Vercel entrypoint for the Student Performance Analysis API."""
 
 from flask import Flask, jsonify
 
-import analysis
-import database as db
+from student_performance_analysis import analysis
+from student_performance_analysis import db
 
 
 app = Flask(__name__)
-db.init_db()
+db.initialize_database()
 
 
 def performance_data():
     return db.query_df(
-        """SELECT p.performance_id, s.student_id, s.name, s.uid, s.section,
-        p.semester, sub.subject_name, sub.subject_code, p.internal_marks,
-        p.external_marks, p.total_marks, p.percentage, p.grade, p.result
-        FROM Performance p
-        JOIN Students s ON p.student_id = s.student_id
-        JOIN Subjects sub ON p.subject_id = sub.subject_id
-        ORDER BY s.name, p.semester, sub.subject_name"""
+        """
+        SELECT p.performance_id, s.student_id, s.name, s.uid, s.section,
+               p.semester, sub.subject_name, sub.subject_code,
+               p.internal_marks, p.external_marks, p.total_marks,
+               p.percentage, p.grade, p.result
+        FROM performance AS p
+        JOIN students AS s ON p.student_id = s.student_id
+        JOIN subjects AS sub ON p.subject_id = sub.subject_id
+        ORDER BY s.name, p.semester, sub.subject_name
+        """
     )
+
+
+def summary_data(data):
+    if data.empty:
+        return {"average": 0.0, "highest": 0.0, "lowest": 0.0, "pass_rate": 0.0}
+    return {
+        "average": round(float(data["percentage"].mean()), 2),
+        "highest": round(float(data["percentage"].max()), 2),
+        "lowest": round(float(data["percentage"].min()), 2),
+        "pass_rate": round(float(data["result"].eq("Pass").mean() * 100), 2),
+    }
 
 
 @app.get("/")
 def home():
     data = performance_data()
-    summary = analysis.class_summary(data)
-    ranking = analysis.student_ranking(data).head(10)
+    summary = summary_data(data)
+    ranking = analysis.student_averages(data).head(10) if not data.empty else data
     rows = ranking.to_dict(orient="records")
     table = "".join(
-        f"<tr><td>{row['rank']}</td><td>{row['name']}</td>"
-        f"<td>{row['uid']}</td><td>{row['average']:.2f}%</td></tr>"
-        for row in rows
+        f"<tr><td>{index}</td><td>{row['name']}</td>"
+        f"<td>{row['uid']}</td><td>{row['average_percentage']:.2f}%</td></tr>"
+        for index, row in enumerate(rows, start=1)
     ) or '<tr><td colspan="4">No performance records yet.</td></tr>'
+    students = int(db.query_df("SELECT COUNT(*) AS count FROM students").iloc[0]["count"])
+    cards = "".join(
+        f'<div class="card"><b>{label}</b><br>{value}</div>'
+        for label, value in [
+            ("Students", students),
+            ("Average", f"{summary['average']}%"),
+            ("Highest", f"{summary['highest']}%"),
+            ("Lowest", f"{summary['lowest']}%"),
+            ("Pass rate", f"{summary['pass_rate']}%"),
+        ]
+    )
     return f"""<!doctype html>
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Student Performance Analysis</title>
@@ -49,10 +69,7 @@ table{{width:100%;margin-top:24px;border-collapse:collapse;background:#111827}}
 th,td{{padding:12px;text-align:left;border-bottom:1px solid #263858}}
 small{{color:#9caecb}}</style></head><body><main>
 <h1>Student Performance Analysis</h1><small>Vercel Flask deployment</small>
-<section class="cards">{''.join(f'<div class="card"><b>{label}</b><br>{value}</div>' for label, value in [
-('Students', len(db.query_df('SELECT student_id FROM Students'))),
-('Average', f"{summary['average']}%"), ('Highest', f"{summary['highest']}%"),
-('Lowest', f"{summary['lowest']}%"), ('Pass rate', f"{summary['pass_rate']}%")])}</section>
+<section class="cards">{cards}</section>
 <h2>Top performers</h2><table><tr><th>Rank</th><th>Name</th><th>UID</th><th>Average</th></tr>{table}</table>
 </main></body></html>"""
 
@@ -60,8 +77,8 @@ small{{color:#9caecb}}</style></head><body><main>
 @app.get("/api/summary")
 def summary():
     data = performance_data()
-    result = analysis.class_summary(data)
-    result["students"] = int(db.query_df("SELECT COUNT(*) AS count FROM Students").iloc[0]["count"])
+    result = summary_data(data)
+    result["students"] = int(db.query_df("SELECT COUNT(*) AS count FROM students").iloc[0]["count"])
     return jsonify(result)
 
 
